@@ -17,11 +17,11 @@ const sourcemaps = require('gulp-sourcemaps');
 const ts = require('gulp-typescript');
 const util = require('gulp-util');
 
-let buildDir = process.env.BUILD_DIR || 'build';
-let tsProject = ts.createProject('tsconfig.json');
-let tsProjectSearchAddon = ts.createProject('./src/addons/search/tsconfig.json');
-let srcDir = tsProject.config.compilerOptions.rootDir;
-let outDir = tsProject.config.compilerOptions.outDir;
+var buildDir = process.env.BUILD_DIR || 'build';
+var tsProject = ts.createProject('tsconfig.json');
+var tsProjectSearchAddon = ts.createProject('./src/addons/search/tsconfig.json');
+var srcDir = tsProject.config.compilerOptions.rootDir;
+var outDir = tsProject.config.compilerOptions.outDir;
 
 // Under some environments like TravisCI, this comes out at absolute which can
 // break the build. This ensures that the outDir is absolute.
@@ -34,26 +34,26 @@ if (path.normalize(outDir).indexOf(__dirname) !== 0) {
  * file compiled.
  */
 gulp.task('tsc', function () {
-  // Remove the ${outDir}/ directory to prevent confusion if files were deleted in ${srcDir}/
+  // Remove the ${outDir}/ directory to prevent confusion if files were devared in ${srcDir}/
   fs.emptyDirSync(`${outDir}`);
 
   // Build all TypeScript files (including tests) to ${outDir}/, based on the configuration defined in
   // `tsconfig.json`.
-  let tsResult = tsProject.src().pipe(sourcemaps.init()).pipe(tsProject());
-  let tsc = merge(
+  var tsResult = tsProject.src().pipe(sourcemaps.init()).pipe(tsProject());
+  var tsc = merge(
     tsResult.js.pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: ''})).pipe(gulp.dest(outDir)),
     tsResult.dts.pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: ''})).pipe(gulp.dest(outDir))
   );
 
   fs.emptyDirSync(`${outDir}/addons/search`);
-  let tsResultSearchAddon = tsProjectSearchAddon.src().pipe(sourcemaps.init()).pipe(tsProjectSearchAddon());
-  let tscSearchAddon = tsResultSearchAddon.js.pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: ''})).pipe(gulp.dest(`${outDir}/addons/search`));
+  var tsResultSearchAddon = tsProjectSearchAddon.src().pipe(sourcemaps.init()).pipe(tsProjectSearchAddon());
+  var tscSearchAddon = tsResultSearchAddon.js.pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: ''})).pipe(gulp.dest(`${outDir}/addons/search`));
 
   // Copy all addons from ${srcDir}/ to ${outDir}/
-  let copyAddons = gulp.src([`${srcDir}/addons/**/*`, `!${srcDir}/addons/search`, `!${srcDir}/addons/search/**`]).pipe(gulp.dest(`${outDir}/addons`));
+  var copyAddons = gulp.src([`${srcDir}/addons/**/*`, `!${srcDir}/addons/search`, `!${srcDir}/addons/search/**`]).pipe(gulp.dest(`${outDir}/addons`));
 
   // Copy stylesheets from ${srcDir}/ to ${outDir}/
-  let copyStylesheets = gulp.src(`${srcDir}/**/*.css`).pipe(gulp.dest(outDir));
+  var copyStylesheets = gulp.src(`${srcDir}/**/*.css`).pipe(gulp.dest(outDir));
 
   return merge(tsc, tscSearchAddon, copyAddons, copyStylesheets);
 });
@@ -66,7 +66,7 @@ gulp.task('browserify', ['tsc'], function() {
   // Ensure that the build directory exists
   fs.ensureDirSync(buildDir);
 
-  let browserifyOptions = {
+  var browserifyOptions = {
     basedir: buildDir,
     debug: true,
     entries: [`${outDir}/xterm.js`],
@@ -74,7 +74,7 @@ gulp.task('browserify', ['tsc'], function() {
     cache: {},
     packageCache: {}
   };
-  let bundleStream = browserify(browserifyOptions)
+  var bundleStream = browserify(browserifyOptions)
         .bundle()
         .pipe(source('xterm.js'))
         .pipe(buffer())
@@ -83,20 +83,20 @@ gulp.task('browserify', ['tsc'], function() {
         .pipe(gulp.dest(buildDir));
 
   // Copy stylesheets from ${outDir}/ to ${buildDir}/
-  let copyStylesheets = gulp.src(`${outDir}/**/*.css`).pipe(gulp.dest(buildDir));
+  var copyStylesheets = gulp.src(`${outDir}/**/*.css`).pipe(gulp.dest(buildDir));
 
   return merge(bundleStream, copyStylesheets);
 });
 
 gulp.task('browserify-addons', ['tsc'], function() {
-  let searchOptions = {
+  var searchOptions = {
     basedir: `${buildDir}/addons/search`,
     debug: true,
     entries: [`${outDir}/addons/search/search.js`],
     cache: {},
     packageCache: {}
   };
-  let searchBundle = browserify(searchOptions)
+  var searchBundle = browserify(searchOptions)
         .external(path.join(outDir, 'Terminal.js'))
         .bundle()
         .pipe(source('./addons/search/search.js'))
@@ -106,7 +106,7 @@ gulp.task('browserify-addons', ['tsc'], function() {
         .pipe(gulp.dest(buildDir));
 
   // Copy all add-ons from outDir to buildDir
-  let copyAddons = gulp.src([
+  var copyAddons = gulp.src([
     // Copy JS addons
     `${outDir}/addons/**/*`,
     // Exclude TS addons from copy as they are being built via browserify
@@ -142,7 +142,7 @@ gulp.task('mocha', ['instrument-test'], function () {
  * gulp mocha-test --test InputHandler.test
  */
 gulp.task('mocha-test', ['instrument-test'], function () {
-  let testName = util.env.test;
+  var testName = util.env.test;
   util.log("Run test by Name: " + testName);
   return gulp.src([`${outDir}/${testName}.js`, `${outDir}/**/${testName}.js`], {read: false})
          .pipe(mocha())
@@ -156,7 +156,7 @@ gulp.task('mocha-test', ['instrument-test'], function () {
  * compiled JavaScript files in ${outDir}/).
  */
 gulp.task('sorcery', ['browserify'], function () {
-  let chain = sorcery.loadSync(`${buildDir}/xterm.js`);
+  var chain = sorcery.loadSync(`${buildDir}/xterm.js`);
   chain.apply();
   chain.writeSync();
 });
